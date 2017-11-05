@@ -22,7 +22,7 @@ function loadImage() {
 	    imageData = ctx.getImageData(0, 0, 500, 500);
         };
 
-        img1.src = 'http://www.moishelettvin.com/header.png';
+        img1.src = 'img.png';
     }
 
     var elemLeft = cvs.offsetLeft,
