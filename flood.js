@@ -97,7 +97,7 @@ function enqueue(item) {
     if (!(item[0] * 500 + item[1] in seen_coords)) {
         seen_coords[item[0] * 500 + item[1]] = 1;
 
-        if (Math.random() < (queue.length / 500)) {
+        if (Math.random() < (queue.length / 50)) {
             second_queue.push(item);
         }else{
             queue.push(item);
@@ -105,28 +105,30 @@ function enqueue(item) {
     }
 }
 
-function processSubqueue(ctx, c, ogc, q, cnt) {
-    while (q.length > 0) {
-        var idx = Math.floor(Math.random() * q.length);
-        var item = q.splice(idx, 1)[0];
-        processQueueItem(ctx, item[0], item[1], c, ogc);
-
-        cnt += 1;
-        if (cnt > max) {
+function processSubqueue(ctx, c, ogc, q, q2, cnt) {
+    for (let i = 0; i < max; i++) {
+        var item;
+        if (q.length) {
+            var idx = Math.floor(Math.random() * q.length);
+            item = q.splice(idx, 1)[0];
+        } else if (q2.length) {
+            item = q2.pop();
+        } else {
             break;
         }
+        processQueueItem(ctx, item[0], item[1], c, ogc);
     }
 
     return cnt;
 }
 
 function processQueue(ctx, c, ogc) {
-    var cnt = processSubqueue(ctx, c, ogc, queue, 0);
-
+    var cnt = processSubqueue(ctx, c, ogc, queue, second_queue, 0);
+/*
     if (!queue.length){
         processSubqueue(ctx, c, ogc, second_queue, cnt);
     }
-
+*/
     setTimeout(function() { processQueue(ctx, c, ogc); }, 0);
 }
 
