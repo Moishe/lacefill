@@ -22,7 +22,7 @@ function loadImage() {
 	    imageData = ctx.getImageData(0, 0, 500, 500);
         };
 
-        img1.src = 'img.png';
+        img1.src = 'http://www.moishelettvin.com/header.png';
     }
 
     var elemLeft = cvs.offsetLeft,
@@ -65,14 +65,14 @@ function processQueueItem(ctx, x, y, c, ogc) {
     enqueue([x, y - 1]);
     enqueue([x, y + 1]);
 
-    var decayer = setInterval(function(){ 
+    var decayer = setInterval(function(){
 	    var r = Math.max(0, curc[0] - (idx * 20));
 	    var g = Math.max(0, curc[1] - (idx * 100));
 	    var b = Math.max(0, curc[2] - (idx * 100));
 	    if (r == 0 && g == 0 && b == 0) {
 		clearInterval(decayer);
 	    }
-	    
+
 	    ctx.fillStyle = "rgba("+r+","+g+","+b+","+1+")";
 	    ctx.fillRect( x, y, 1, 1 );
 
@@ -100,8 +100,8 @@ function enqueue(item) {
 
 function processQueue(ctx, c, ogc) {
     for (var i = 0; i < 5; i++){
-	item = queue.shift();	
-	if (!item) { 
+	item = queue.shift();
+	if (!item) {
 	    queue.push(second_queue.pop());
 	    break;
 	}
