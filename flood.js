@@ -52,56 +52,68 @@ function interpolate(o, n, step, steps){
     return Math.floor(o - ((o - n) * (step / steps)));
 }
 
-function processQueueItem(ctx, x, y, c, ogc) {
-    if (x < 0 || y < 0 || x > 500 || y > 500) {
-    return;
-    }
+function processQueueItem(ctx, item, c, ogc) {
+    var x = item[1];
+    var y = item[2];
 
-    var curc = getRgbPixel(x,y);
-    if (!rgbClose(curc, ogc)) {
+    if (x < 0 || y < 0 || x > 500 || y > 500) {
         return;
     }
 
-    var idx = 1;
-    var max = 5;
-/*
-    var decayer = setInterval(function(){
-       var r = Math.max(0, curc[0] - (idx * 50));
-       var g = Math.max(0, curc[1] - (idx * 100));
-       var b = Math.max(0, curc[2] - (idx * 100));
-       if (r == 0 && g == 0 && b == 0) {
-           clearInterval(decayer);
-       }
+    if (item[0] == 'r') {
+        var curc = getRgbPixel(x,y);
+        if (!rgbClose(curc, ogc)) {
+            return;
+        }
+
+        enqueue(['r', x - 1, y]);
+        enqueue(['r', x + 1, y]);
+        enqueue(['r', x, y - 1]);
+        enqueue(['r', x, y + 1]);
+
+//       ctx.fillStyle = "rgba("+0+","+0+","+0+","+1+")";
+//       ctx.fillRect( x, y, 1, 1 );
+        enqueue(['d', x, y, curc, 1])
+    } else if (item[0] == 'd') {
+       var curc = item[3];
+       var idx = item[4];
+       var r = Math.max(0, curc[0] - (idx * 10));
+       var g = Math.max(0, curc[1] - (idx * 20));
+       var b = Math.max(0, curc[2] - (idx * 20));
+
 
        ctx.fillStyle = "rgba("+r+","+g+","+b+","+1+")";
        ctx.fillRect( x, y, 1, 1 );
 
-       idx = idx + 1;
-    }, 0);
-*/
-   ctx.fillStyle = "rgba(0,0,0,1)";
-   ctx.fillRect( x, y, 1, 1 );
-    enqueue([x - 1, y]);
-    enqueue([x + 1, y]);
-    enqueue([x, y - 1]);
-    enqueue([x, y + 1]);
+       if (r == 0 && g == 0 && b == 0) {
+           return;
+       }
+
+        enqueue(['d', x, y, curc, idx + 1])
+    }
 }
 
 var queue = [];
 var second_queue = [];
+var fade_queue = [];
 var seen_coords = {};
-const max = 50;
+const max = 200;
 
 function enqueue(item) {
 
-    if (!(item[0] * 500 + item[1] in seen_coords)) {
-        seen_coords[item[0] * 500 + item[1]] = 1;
+    if (item[0] == 'r') {
+        if (item[1] * 500 + item[2] in seen_coords) {
+            return;
+        }
 
-        if (Math.random() < (queue.length / 50)) {
+        seen_coords[item[1] * 500 + item[2]] = 1;
+        if (Math.random() < (queue.length / 100)) {
             second_queue.push(item);
         }else{
             queue.push(item);
         }
+    } else {
+        fade_queue.push(item);
     }
 }
 
@@ -116,7 +128,12 @@ function processSubqueue(ctx, c, ogc, q, q2, cnt) {
         } else {
             break;
         }
-        processQueueItem(ctx, item[0], item[1], c, ogc);
+        processQueueItem(ctx, item, c, ogc);
+    }
+
+    var fade_queue_intact = fade_queue.splice(0, fade_queue.length);
+    while (fade_queue_intact.length) {
+        processQueueItem(ctx, fade_queue_intact.pop(), c, ogc);
     }
 
     return cnt;
@@ -124,16 +141,11 @@ function processSubqueue(ctx, c, ogc, q, q2, cnt) {
 
 function processQueue(ctx, c, ogc) {
     var cnt = processSubqueue(ctx, c, ogc, queue, second_queue, 0);
-/*
-    if (!queue.length){
-        processSubqueue(ctx, c, ogc, second_queue, cnt);
-    }
-*/
     setTimeout(function() { processQueue(ctx, c, ogc); }, 0);
 }
 
 function floodFill(ctx, x, y) {
-    enqueue([x, y]);
+    enqueue(['r', x, y]);
 
     var ogc = ctx.getImageData(x, y, 1, 1).data.slice(0,3);
 
